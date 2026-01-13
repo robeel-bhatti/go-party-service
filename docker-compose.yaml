@@ -1,0 +1,19 @@
+name: party-service
+
+services:
+  database:
+    image: postgres:18.0
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: admin
+      POSTGRES_DB: Party
+  cache:
+    image: redis:8.2.2
+    ports:
+      - "6379:6379"
+  cache-insight:
+    image: redis/redisinsight
+    ports:
+      - "5540:5540"
