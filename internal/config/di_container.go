@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/jackc/pgx/v5/pgxpool"
 	"log/slog"
 	"robeel-bhatti/go-party-service/internal/controller"
 	"robeel-bhatti/go-party-service/internal/repository"
@@ -8,15 +9,18 @@ import (
 )
 
 type Container struct {
-	Pc *controller.PartyController
-	Ps *service.PartyService
-	Pr *repository.PartyRepository
+	partyController *controller.PartyController
+	partyService    *service.PartyService
+	partyRepository *repository.PartyRepository
 }
 
-func NewContainer() *Container {
-	log := slog.Default()
-	pr := &repository.PartyRepository{Log: log}
-	ps := &service.PartyService{Log: log, Pr: pr}
-	pc := &controller.PartyController{Log: log, Ps: ps}
-	return &Container{Pc: pc, Ps: ps, Pr: pr}
+func NewContainer(logger *slog.Logger, db *pgxpool.Pool) *Container {
+	pr := repository.NewPartyRepository(logger, db)
+	ps := service.NewPartyService(logger, pr)
+	pc := controller.NewPartyController(logger, ps)
+	return &Container{
+		partyController: pc,
+		partyService:    ps,
+		partyRepository: pr,
+	}
 }

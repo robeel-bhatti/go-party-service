@@ -6,6 +6,13 @@ import (
 )
 
 type PartyService struct {
-	Log *slog.Logger
-	Pr  *repository.PartyRepository
+	logger    *slog.Logger
+	partyRepo *repository.PartyRepository
+}
+
+func NewPartyService(logger *slog.Logger, pr *repository.PartyRepository) *PartyService {
+	return &PartyService{
+		logger:    logger,
+		partyRepo: pr,
+	}
 }

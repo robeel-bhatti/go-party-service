@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	_ "github.com/joho/godotenv/autoload"
 	"log/slog"
 	"os"
 	"robeel-bhatti/go-party-service/internal/config"
@@ -9,24 +11,24 @@ import (
 func main() {
 	logger := configureLogger()
 	app := config.NewApp(logger)
-	app.Run()
+	app.Run(context.Background())
 }
 
 func configureLogger() *slog.Logger {
-	var level slog.Level
-	val := os.Getenv("LOG_LEVEL")
+	var logLevel slog.Level
+	value := os.Getenv("LOG_LEVEL")
 
-	switch val {
+	switch value {
 	case "debug":
-		level = slog.LevelDebug
+		logLevel = slog.LevelDebug
 	case "warn":
-		level = slog.LevelWarn
+		logLevel = slog.LevelWarn
 	case "error":
-		level = slog.LevelError
+		logLevel = slog.LevelError
 	default:
-		level = slog.LevelInfo
+		logLevel = slog.LevelInfo
 	}
 
-	opts := &slog.HandlerOptions{Level: level}
+	opts := &slog.HandlerOptions{Level: logLevel}
 	return slog.New(slog.NewJSONHandler(os.Stdout, opts)).With("service", os.Getenv("SERVICE_NAME"))
 }

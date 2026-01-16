@@ -7,8 +7,15 @@ import (
 )
 
 type PartyController struct {
-	Log *slog.Logger
-	Ps  *service.PartyService
+	logger       *slog.Logger
+	partyService *service.PartyService
+}
+
+func NewPartyController(logger *slog.Logger, ps *service.PartyService) *PartyController {
+	return &PartyController{
+		logger:       logger,
+		partyService: ps,
+	}
 }
 
 func (pc *PartyController) GetPartyById(w http.ResponseWriter, r *http.Request) {
