@@ -1,4 +1,4 @@
-package repository
+package internal
 
 import (
 	"github.com/jackc/pgx/v5/pgxpool"

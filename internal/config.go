@@ -1,4 +1,4 @@
-package config
+package internal
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"robeel-bhatti/go-party-service/internal/controller"
 )
 
 type App struct {
@@ -15,13 +14,15 @@ type App struct {
 }
 
 // NewApp creates and returns an instance of an App struct that represents
-// the main application object
+// the main application object/
 func NewApp(logger *slog.Logger) *App {
 	return &App{
 		logger: logger,
 	}
 }
 
+// Run starts up the application and creates all the necessary
+// configuration the app needs in order to run.
 func (app *App) Run(ctx context.Context) {
 	db, err := app.connectToDB(ctx)
 	defer db.Close()
@@ -31,14 +32,14 @@ func (app *App) Run(ctx context.Context) {
 		os.Exit(1)
 	}
 
-	_, err = app.connectToCache(ctx) // TODO: add back cache variable when ready to use
+	cache, err := app.connectToCache(ctx)
 	if err != nil {
 		app.logger.Error("failed to connect to cache", "reason", err)
 		os.Exit(1)
 	}
 
-	c := NewContainer(app.logger, db)
-	mux := app.getMultiplexer(c.partyController)
+	c := NewContainer(app.logger, db, cache)
+	mux := app.getMultiplexer(ctx, c)
 	err = http.ListenAndServe(os.Getenv("PORT"), mux)
 
 	if err != nil {
@@ -47,6 +48,8 @@ func (app *App) Run(ctx context.Context) {
 	}
 }
 
+// connectToDB creates a connection to the database
+// and returns a database object that can be used to query.
 func (app *App) connectToDB(ctx context.Context) (*pgxpool.Pool, error) {
 	db, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
@@ -61,6 +64,8 @@ func (app *App) connectToDB(ctx context.Context) (*pgxpool.Pool, error) {
 	return db, nil
 }
 
+// connectToCache creates a connection to the cache
+// and returns a cache object that can be used to query.
 func (app *App) connectToCache(ctx context.Context) (*redis.Client, error) {
 	opts := &redis.Options{
 		Addr: os.Getenv("REDIS_URL"),
@@ -75,12 +80,14 @@ func (app *App) connectToCache(ctx context.Context) (*redis.Client, error) {
 	return cache, nil
 }
 
-func (app *App) getMultiplexer(pc *controller.PartyController) *http.ServeMux {
+// getMultiplexer creates and returns this application's main multiplexer
+// so that incoming HTTP requests can be routed to the correct endpoint.
+func (app *App) getMultiplexer(ctx context.Context, c *Container) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /parties/{id}", pc.GetPartyById)
-	mux.HandleFunc("PATCH /parties/{id}", pc.UpdateParty)
-	mux.HandleFunc("DELETE /parties/{id}", pc.DeleteParty)
-	mux.HandleFunc("POST /parties", pc.CreateParty)
-	mux.HandleFunc("GET /parties", pc.GetParties)
+	mux.HandleFunc("GET /parties/{id}", CacheMiddleware(ctx, c.partyController.GetPartyById, c.cache))
+	mux.HandleFunc("PATCH /parties/{id}", c.partyController.UpdateParty)
+	mux.HandleFunc("DELETE /parties/{id}", c.partyController.DeleteParty)
+	mux.HandleFunc("POST /parties", c.partyController.CreateParty)
+	mux.HandleFunc("GET /parties", c.partyController.GetParties)
 	return mux
 }

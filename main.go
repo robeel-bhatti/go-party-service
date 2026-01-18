@@ -5,12 +5,12 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"log/slog"
 	"os"
-	"robeel-bhatti/go-party-service/internal/config"
+	"robeel-bhatti/go-party-service/internal"
 )
 
 func main() {
 	logger := configureLogger()
-	app := config.NewApp(logger)
+	app := internal.NewApp(logger)
 	app.Run(context.Background())
 }
 

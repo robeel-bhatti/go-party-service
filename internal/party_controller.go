@@ -1,17 +1,16 @@
-package controller
+package internal
 
 import (
 	"log/slog"
 	"net/http"
-	"robeel-bhatti/go-party-service/internal/service"
 )
 
 type PartyController struct {
 	logger       *slog.Logger
-	partyService *service.PartyService
+	partyService *PartyService
 }
 
-func NewPartyController(logger *slog.Logger, ps *service.PartyService) *PartyController {
+func NewPartyController(logger *slog.Logger, ps *PartyService) *PartyController {
 	return &PartyController{
 		logger:       logger,
 		partyService: ps,
