@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"errors"
+	"net/http"
 	"time"
 )
 
@@ -37,20 +39,20 @@ func mapToAddressDTO(pr *PartyRow) *Address {
 	}
 }
 
-type PartyError struct {
-	timestamp time.Time
-	path      string
-	status    string
-	code      int
-	message   string
-}
-
-func mapToPartyError(p, s string, c int, m string) *PartyError {
-	return &PartyError{
-		timestamp: time.Now(),
-		path:      p,
-		status:    s,
-		code:      c,
-		message:   m,
+func mapToPartyError(path string, err error) *PartyError {
+	pe := &PartyError{
+		Timestamp: time.Now(),
+		Path:      path,
+		Message:   err.Error(),
 	}
+
+	for e, c := range ErrMap {
+		if errors.Is(err, e) {
+			pe.Code = c
+			pe.Status = http.StatusText(c)
+			break
+		}
+	}
+
+	return pe
 }

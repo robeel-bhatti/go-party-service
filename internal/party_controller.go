@@ -2,8 +2,6 @@ package internal
 
 import (
 	"encoding/json"
-	"errors"
-	"github.com/jackc/pgx/v5"
 	"log/slog"
 	"net/http"
 )
@@ -23,19 +21,17 @@ func NewPartyController(logger *slog.Logger, ps *PartyService) *PartyController 
 func (pc *PartyController) GetPartyById(w http.ResponseWriter, r *http.Request) {
 	res, err := pc.partyService.GetPartyById(r.Context())
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			pe := mapToPartyError(r.RequestURI, http.StatusText(http.StatusNotFound), http.StatusNotFound, "party not found")
-			b, err := json.Marshal(pe)
-			if err != nil {
-				pc.logger.Error(err.Error())
+		pe := mapToPartyError(r.URL.Path, err)
+		pc.logger.Info("this is", "message", pe)
+		b, err := json.Marshal(pe)
+		if err != nil {
 
-			}
-			_, err = w.Write(b)
-			if err != nil {
-
-			}
-			return
 		}
+		_, err = w.Write(b)
+		if err != nil {
+
+		}
+		return
 	}
 
 	b, err := json.Marshal(res)

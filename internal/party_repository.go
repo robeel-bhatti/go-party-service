@@ -84,7 +84,7 @@ func (r *PartyRepository) GetById(ctx context.Context) (*PartyRow, error) {
 	}
 	defer row.Close()
 
-	partyRow, err := pgx.CollectExactlyOneRow(row, pgx.RowToStructByName[PartyRow])
+	partyRow, err := pgx.CollectOneRow(row, pgx.RowToStructByName[PartyRow])
 	if err != nil {
 		return nil, err
 	}

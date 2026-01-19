@@ -2,6 +2,9 @@ package internal
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
 	"log/slog"
 	"time"
@@ -55,7 +58,9 @@ func NewPartyService(logger *slog.Logger, pr *PartyRepository, ca *redis.Client)
 func (s *PartyService) GetPartyById(ctx context.Context) (*Party, error) {
 	pr, err := s.partyRepo.GetById(ctx)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("party %s %w", ctx.Value(partyIdKey), ErrNotFound)
+		}
 	}
 	return mapToPartyDTO(pr), nil
 }
