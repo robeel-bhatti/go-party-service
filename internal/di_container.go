@@ -6,21 +6,26 @@ import (
 	"log/slog"
 )
 
-type Container struct {
-	db              *pgxpool.Pool
-	cache           *redis.Client
-	partyController *PartyController
-	partyService    *PartyService
-	partyRepository *PartyRepository
-}
+type (
+	Container struct {
+		db              *pgxpool.Pool
+		cache           *redis.Client
+		middleware      *Middleware
+		partyController *PartyController
+		partyService    *PartyService
+		partyRepository *PartyRepository
+	}
+)
 
-func NewContainer(logger *slog.Logger, db *pgxpool.Pool, ca *redis.Client) *Container {
+func NewContainer(logger *slog.Logger, db *pgxpool.Pool, cache *redis.Client) *Container {
+	mw := NewMiddleware(logger, cache)
 	pr := NewPartyRepository(logger, db)
-	ps := NewPartyService(logger, pr, ca)
+	ps := NewPartyService(logger, pr, cache)
 	pc := NewPartyController(logger, ps)
 	return &Container{
 		db:              db,
-		cache:           ca,
+		cache:           cache,
+		middleware:      mw,
 		partyController: pc,
 		partyService:    ps,
 		partyRepository: pr,

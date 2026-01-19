@@ -9,48 +9,72 @@ import (
 	"os"
 )
 
-type App struct {
-	logger *slog.Logger
-}
+const (
+	contentType = "application/json"
+)
+
+type (
+	App struct{}
+)
 
 // NewApp creates and returns an instance of an App struct that represents
-// the main application object/
-func NewApp(logger *slog.Logger) *App {
-	return &App{
-		logger: logger,
-	}
+// the main application object.
+func NewApp() *App {
+	return &App{}
 }
 
 // Run starts up the application and creates all the necessary
 // configuration the app needs in order to run.
 func (app *App) Run(ctx context.Context) {
-	db, err := app.connectToDB(ctx)
+	logger := app.configureLogger()
+
+	db, err := app.configureDB(ctx)
 	defer db.Close()
 
 	if err != nil {
-		app.logger.Error("failed to connect to database", "reason", err)
+		logger.Error("failed to connect to database", "reason", err)
 		os.Exit(1)
 	}
 
-	cache, err := app.connectToCache(ctx)
+	cache, err := app.configureCache(ctx)
 	if err != nil {
-		app.logger.Error("failed to connect to cache", "reason", err)
+		logger.Error("failed to connect to cache", "reason", err)
 		os.Exit(1)
 	}
 
-	c := NewContainer(app.logger, db, cache)
-	mux := app.getMultiplexer(ctx, c)
+	c := NewContainer(logger, db, cache)
+	mux := app.configureMultiplexer(c)
 	err = http.ListenAndServe(os.Getenv("PORT"), mux)
 
 	if err != nil {
-		app.logger.Error("failed to start server", "reason", err)
+		logger.Error("failed to start server", "reason", err)
 		os.Exit(1)
 	}
 }
 
-// connectToDB creates a connection to the database
+// configureLogger creates the app-wide logger.
+func (app *App) configureLogger() *slog.Logger {
+	var logLevel slog.Level
+	value := os.Getenv("LOG_LEVEL")
+
+	switch value {
+	case "debug":
+		logLevel = slog.LevelDebug
+	case "warn":
+		logLevel = slog.LevelWarn
+	case "error":
+		logLevel = slog.LevelError
+	default:
+		logLevel = slog.LevelInfo
+	}
+
+	opts := &slog.HandlerOptions{Level: logLevel}
+	return slog.New(slog.NewJSONHandler(os.Stdout, opts)).With("service", os.Getenv("SERVICE_NAME"))
+}
+
+// configureDB creates a connection to the database
 // and returns a database object that can be used to query.
-func (app *App) connectToDB(ctx context.Context) (*pgxpool.Pool, error) {
+func (app *App) configureDB(ctx context.Context) (*pgxpool.Pool, error) {
 	db, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return nil, err
@@ -64,9 +88,9 @@ func (app *App) connectToDB(ctx context.Context) (*pgxpool.Pool, error) {
 	return db, nil
 }
 
-// connectToCache creates a connection to the cache
+// configureCache creates a connection to the cache
 // and returns a cache object that can be used to query.
-func (app *App) connectToCache(ctx context.Context) (*redis.Client, error) {
+func (app *App) configureCache(ctx context.Context) (*redis.Client, error) {
 	opts := &redis.Options{
 		Addr: os.Getenv("REDIS_URL"),
 	}
@@ -80,14 +104,16 @@ func (app *App) connectToCache(ctx context.Context) (*redis.Client, error) {
 	return cache, nil
 }
 
-// getMultiplexer creates and returns this application's main multiplexer
+// configureMultiplexer creates and returns this application's main multiplexer
 // so that incoming HTTP requests can be routed to the correct endpoint.
-func (app *App) getMultiplexer(ctx context.Context, c *Container) *http.ServeMux {
+func (app *App) configureMultiplexer(c *Container) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /parties/{id}", CacheMiddleware(ctx, c.partyController.GetPartyById, c.cache))
-	mux.HandleFunc("PATCH /parties/{id}", c.partyController.UpdateParty)
-	mux.HandleFunc("DELETE /parties/{id}", c.partyController.DeleteParty)
-	mux.HandleFunc("POST /parties", c.partyController.CreateParty)
-	mux.HandleFunc("GET /parties", c.partyController.GetParties)
+	mw := c.middleware
+	pc := c.partyController
+	mux.HandleFunc("GET /api/v1/parties/{id}", mw.UpdateContext(mw.Logging(mw.Headers(mw.Cache(pc.GetPartyById)))))
+	mux.HandleFunc("PATCH /api/v1/parties/{id}", c.partyController.UpdateParty)
+	mux.HandleFunc("DELETE /api/v1/parties/{id}", c.partyController.DeleteParty)
+	mux.HandleFunc("POST /api/v1/parties", c.partyController.CreateParty)
+	mux.HandleFunc("GET /api/v1/parties", c.partyController.GetParties)
 	return mux
 }

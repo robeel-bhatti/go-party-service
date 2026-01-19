@@ -1,14 +1,17 @@
 package internal
 
 import (
+	"encoding/json"
 	"log/slog"
 	"net/http"
 )
 
-type PartyController struct {
-	logger       *slog.Logger
-	partyService *PartyService
-}
+type (
+	PartyController struct {
+		logger       *slog.Logger
+		partyService *PartyService
+	}
+)
 
 func NewPartyController(logger *slog.Logger, ps *PartyService) *PartyController {
 	return &PartyController{
@@ -18,7 +21,20 @@ func NewPartyController(logger *slog.Logger, ps *PartyService) *PartyController 
 }
 
 func (pc *PartyController) GetPartyById(w http.ResponseWriter, r *http.Request) {
+	res, err := pc.partyService.GetPartyById(r.Context())
+	if err != nil {
 
+	}
+
+	b, err := json.Marshal(res)
+	if err != nil {
+
+	}
+
+	_, err = w.Write(b)
+	if err != nil {
+
+	}
 }
 
 func (pc *PartyController) UpdateParty(w http.ResponseWriter, r *http.Request) {
