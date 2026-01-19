@@ -12,13 +12,12 @@ import (
 	"strconv"
 )
 
-type (
-	PartyIdContextKey string
-	Middleware        struct {
-		logger *slog.Logger
-		cache  *redis.Client
-	}
-)
+type PartyIdContextKey string
+
+type Middleware struct {
+	logger *slog.Logger
+	cache  *redis.Client
+}
 
 const (
 	partyIdKey PartyIdContextKey = "partyId"

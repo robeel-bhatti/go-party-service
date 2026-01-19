@@ -13,9 +13,7 @@ const (
 	contentType = "application/json"
 )
 
-type (
-	App struct{}
-)
+type App struct{}
 
 // NewApp creates and returns an instance of an App struct that represents
 // the main application object.
