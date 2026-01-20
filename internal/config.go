@@ -110,8 +110,6 @@ func (app *App) configureMultiplexer(c *Container) *http.ServeMux {
 	pc := c.partyController
 	mux.HandleFunc("GET /api/v1/parties/{id}", mw.ValidatePartyId(mw.Logging(mw.Headers(mw.Cache(pc.GetPartyById)))))
 	mux.HandleFunc("PATCH /api/v1/parties/{id}", c.partyController.UpdateParty)
-	mux.HandleFunc("DELETE /api/v1/parties/{id}", c.partyController.DeleteParty)
 	mux.HandleFunc("POST /api/v1/parties", c.partyController.CreateParty)
-	mux.HandleFunc("GET /api/v1/parties", c.partyController.GetParties)
 	return mux
 }
