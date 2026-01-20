@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func mapToPartyDTO(pr *PartyRow) *Party {
-	return &Party{
+func mapToPartyDTO(pr *PartyRow) *PartyDTO {
+	return &PartyDTO{
 		ID:          pr.ID,
 		FirstName:   pr.FirstName,
 		LastName:    pr.LastName,
@@ -22,8 +22,8 @@ func mapToPartyDTO(pr *PartyRow) *Party {
 	}
 }
 
-func mapToAddressDTO(pr *PartyRow) *Address {
-	return &Address{
+func mapToAddressDTO(pr *PartyRow) *AddressDTO {
+	return &AddressDTO{
 		ID:         pr.AddrID,
 		StreetOne:  pr.AddrStreetOne,
 		StreetTwo:  pr.AddrStreetTwo,
