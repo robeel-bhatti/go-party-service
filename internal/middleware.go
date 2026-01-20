@@ -30,9 +30,22 @@ func NewMiddleware(logger *slog.Logger, cache *redis.Client) *Middleware {
 	}
 }
 
-func (m *Middleware) UpdateContext(next http.HandlerFunc) http.HandlerFunc {
+func (m *Middleware) ValidatePartyId(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		partyId, _ := strconv.Atoi(r.PathValue("id"))
+		id := r.PathValue("id")
+		if id == "" {
+			m.logger.Warn("missing party ID in request", "path", r.URL.Path)
+			http.Error(w, "party id is required", http.StatusUnprocessableEntity)
+			return
+		}
+
+		partyId, err := strconv.Atoi(id)
+		if err != nil {
+			m.logger.Warn("invalid party ID format", "id", id, "error", err)
+			http.Error(w, "party id is invalid ", http.StatusUnprocessableEntity)
+			return
+		}
+
 		r = r.WithContext(context.WithValue(r.Context(), partyIdKey, partyId))
 		next(w, r)
 	}
@@ -40,7 +53,7 @@ func (m *Middleware) UpdateContext(next http.HandlerFunc) http.HandlerFunc {
 
 func (m *Middleware) Logging(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		g := slog.Group("request", "method", r.Method, "path", r.Context().Value(partyIdKey))
+		g := slog.Group("request", "method", r.Method, "path", r.RequestURI)
 		m.logger.Info("http request received", g)
 		next(w, r)
 	}
@@ -56,9 +69,14 @@ func (m *Middleware) Headers(next http.HandlerFunc) http.HandlerFunc {
 
 func (m *Middleware) Cache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		partyId := r.Context().Value(partyIdKey).(int)
-		m.logger.Info("checking cache for party", "partyID", partyId)
+		partyId, ok := r.Context().Value(partyIdKey).(int)
+		if !ok {
+			m.logger.Error("invalid or missing party ID in context")
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 
+		m.logger.Info("checking cache for party", "partyID", partyId)
 		ck := fmt.Sprintf("%s:%d", os.Getenv("SERVICE_NAME"), partyId)
 		res, err := m.cache.Get(r.Context(), ck).Result()
 
