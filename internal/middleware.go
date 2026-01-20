@@ -32,7 +32,8 @@ func NewMiddleware(logger *slog.Logger, cache *redis.Client) *Middleware {
 
 func (m *Middleware) UpdateContext(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		r = r.WithContext(context.WithValue(r.Context(), partyIdKey, r.PathValue("id")))
+		partyId, _ := strconv.Atoi(r.PathValue("id"))
+		r = r.WithContext(context.WithValue(r.Context(), partyIdKey, partyId))
 		next(w, r)
 	}
 }
@@ -55,14 +56,14 @@ func (m *Middleware) Headers(next http.HandlerFunc) http.HandlerFunc {
 
 func (m *Middleware) Cache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		partyId := r.Context().Value(partyIdKey)
-		m.logger.Info("checking cache for party with ID", "partyID", partyId)
+		partyId := r.Context().Value(partyIdKey).(int)
+		m.logger.Info("checking cache for party", "partyID", partyId)
 
-		ck := fmt.Sprintf("%s:%s", os.Getenv("SERVICE_NAME"), partyId)
-		res, err := m.cache.JSONGet(r.Context(), ck).Result()
+		ck := fmt.Sprintf("%s:%d", os.Getenv("SERVICE_NAME"), partyId)
+		res, err := m.cache.Get(r.Context(), ck).Result()
 
 		if errors.Is(err, redis.Nil) {
-			m.logger.Info("cache miss for party with ID", "partyID", partyId)
+			m.logger.Info("cache miss for party", "partyID", partyId)
 			next(w, r)
 			return
 		}
@@ -73,6 +74,7 @@ func (m *Middleware) Cache(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		m.logger.Info("cache hit for party", "partyID", partyId)
 		_, err = w.Write([]byte(res))
 		if err != nil {
 			m.logger.Error("error writing response", "reason", err, "partyId", partyId)

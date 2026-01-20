@@ -48,7 +48,9 @@ func NewPartyRepository(logger *slog.Logger, db *pgxpool.Pool) *PartyRepository 
 	}
 }
 
-func (r *PartyRepository) GetById(ctx context.Context) (*PartyRow, error) {
+// GetById checks the database source to get an existing party with the provided ID
+// Only one row has to be returned otherwise return an error.
+func (r *PartyRepository) GetById(ctx context.Context, partyId int) (*PartyRow, error) {
 	q := `
 		SELECT
 			p.id,
@@ -78,7 +80,7 @@ func (r *PartyRepository) GetById(ctx context.Context) (*PartyRow, error) {
 		LEFT JOIN party_service.address a ON p.address_id = a.id
 		WHERE p.id = $1;
 	`
-	row, err := r.db.Query(ctx, q, ctx.Value(partyIdKey))
+	row, err := r.db.Query(ctx, q, partyId)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +90,5 @@ func (r *PartyRepository) GetById(ctx context.Context) (*PartyRow, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return &partyRow, nil
 }
