@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"robeel-bhatti/go-party-service/internal"
+	"robeel-bhatti/go-party-service/internal/constants"
 	"robeel-bhatti/go-party-service/internal/service"
 )
 
@@ -24,12 +24,12 @@ func NewPartyController(logger *slog.Logger, ps *service.PartyService) *PartyCon
 // if any error occur marshalling or writing the response to the buffer, return a default plaintext 500 response as
 // a final measure.
 func (pc *PartyController) GetPartyById(w http.ResponseWriter, r *http.Request) {
-	partyId := r.Context().Value(internal.partyIdKey).(int)
+	partyId := r.Context().Value(constants.PartyIdKey).(int)
 	pc.logger.Info("controller retrieved request to get party from database", "partyId", partyId)
 	res, err := pc.partyService.GetPartyById(r.Context(), partyId)
 
 	if err != nil {
-		pe := service.mapToPartyError(r.RequestURI, err)
+		pe := service.NewPartyError(r.RequestURI, err)
 		b, err := json.Marshal(pe)
 		if err != nil {
 			http.Error(w, "error marshalling response", http.StatusInternalServerError)
@@ -59,10 +59,10 @@ func (pc *PartyController) GetPartyById(w http.ResponseWriter, r *http.Request) 
 	return
 }
 
-func (pc *PartyController) UpdateParty(w http.ResponseWriter, r *http.Request) {
+func (pc *PartyController) CreateParty(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (pc *PartyController) CreateParty(w http.ResponseWriter, r *http.Request) {
+func (pc *PartyController) UpdateParty(w http.ResponseWriter, r *http.Request) {
 
 }

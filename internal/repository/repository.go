@@ -5,7 +5,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log/slog"
-	"robeel-bhatti/go-party-service/internal/controller"
+	"robeel-bhatti/go-party-service/internal/models"
 )
 
 type PartyRepository struct {
@@ -22,7 +22,7 @@ func NewPartyRepository(logger *slog.Logger, db *pgxpool.Pool) *PartyRepository 
 
 // GetById checks the database source to get an existing party with the provided ID
 // Only one row has to be returned otherwise return an error.
-func (r *PartyRepository) GetById(ctx context.Context, partyId int) (*controller.PartyReadDTO, error) {
+func (r *PartyRepository) GetById(ctx context.Context, partyId int) (*models.PartyReadDTO, error) {
 	q := `
 		SELECT
 			p.id,
@@ -58,12 +58,9 @@ func (r *PartyRepository) GetById(ctx context.Context, partyId int) (*controller
 	}
 	defer row.Close()
 
-	partyRow, err := pgx.CollectOneRow(row, pgx.RowToStructByName[controller.PartyReadDTO])
+	partyRow, err := pgx.CollectOneRow(row, pgx.RowToStructByName[models.PartyReadDTO])
 	if err != nil {
 		return nil, err
 	}
 	return &partyRow, nil
-}
-
-func (r *PartyRepository) AddParty() {
 }

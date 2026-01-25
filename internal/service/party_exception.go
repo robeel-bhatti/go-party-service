@@ -1,4 +1,4 @@
-package controller
+package service
 
 import (
 	"errors"
@@ -28,4 +28,22 @@ type PartyError struct {
 	Status    string
 	Code      int
 	Message   string
+}
+
+func NewPartyError(path string, err error) *PartyError {
+	p := &PartyError{
+		Timestamp: time.Now(),
+		Path:      path,
+		Message:   err.Error(),
+	}
+
+	for e, c := range ErrMap {
+		if errors.Is(err, e) {
+			p.Code = c
+			p.Status = http.StatusText(c)
+			break
+		}
+	}
+
+	return p
 }

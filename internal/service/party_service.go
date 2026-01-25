@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/redis/go-redis/v9"
 	"log/slog"
-	"robeel-bhatti/go-party-service/internal"
-	"robeel-bhatti/go-party-service/internal/controller"
+	"robeel-bhatti/go-party-service/internal/constants"
+	"robeel-bhatti/go-party-service/internal/models"
 	"robeel-bhatti/go-party-service/internal/repository"
 )
 
@@ -31,18 +31,18 @@ func NewPartyService(logger *slog.Logger, pr *repository.PartyRepository, ca *re
 // GetPartyById performs the biz logic to get a party entity from the data layer
 // and return a party domain object to API layer.
 // Set the party in the cache afterward, since if this method is hit there was a party cache miss.
-func (s *PartyService) GetPartyById(ctx context.Context, partyId int) (*controller.PartyDTO, error) {
+func (s *PartyService) GetPartyById(ctx context.Context, partyId int) (*models.PartyResponseDTO, error) {
 	pr, err := s.partyRepo.GetById(ctx, partyId)
 
 	if err != nil {
 		s.logger.Error("database error", "reason", err)
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("failed to get party %d: %w", partyId, controller.ErrNotFound)
+			return nil, fmt.Errorf("failed to get party %d: %w", partyId, ErrNotFound)
 		}
-		return nil, fmt.Errorf("failed to get party %d: %w", partyId, controller.ErrInternalServerError)
+		return nil, fmt.Errorf("failed to get party %d: %w", partyId, ErrInternalServerError)
 	}
 
-	res := internal.mapToPartyDTO(pr)
+	res := mapToPartyResponseDTO(pr)
 	s.setInCache(ctx, partyId, res)
 	return res, nil
 }
@@ -50,14 +50,14 @@ func (s *PartyService) GetPartyById(ctx context.Context, partyId int) (*controll
 // setInCache sets the provided party in the cache.
 // if an error occurs, either marshalling or setting in redis, log the error and continue
 // we don't want to return an exception to the invoking client in this case.
-func (s *PartyService) setInCache(ctx context.Context, partyId int, party *controller.PartyDTO) {
+func (s *PartyService) setInCache(ctx context.Context, partyId int, party *models.PartyResponseDTO) {
 	b, err := json.Marshal(party)
 	if err != nil {
 		s.logger.Error("error marshalling party to set in cache", "reason", err)
 		return
 	}
 
-	ck := fmt.Sprintf("%s:%d", internal.serviceName, partyId)
+	ck := fmt.Sprintf("%s:%d", constants.ServiceName, partyId)
 	_, err = s.cache.Set(ctx, ck, b, 0).Result()
 	if err != nil {
 		s.logger.Error("error setting in cache", "reason", err)

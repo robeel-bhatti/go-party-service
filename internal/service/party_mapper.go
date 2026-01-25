@@ -1,14 +1,11 @@
 package service
 
 import (
-	"errors"
-	"net/http"
-	"robeel-bhatti/go-party-service/internal/controller"
-	"time"
+	"robeel-bhatti/go-party-service/internal/models"
 )
 
-func mapToPartyDTO(pr *controller.PartyReadDTO) *controller.PartyDTO {
-	return &controller.PartyDTO{
+func mapToPartyResponseDTO(pr *models.PartyReadDTO) *models.PartyResponseDTO {
+	return &models.PartyResponseDTO{
 		ID:          pr.ID,
 		FirstName:   pr.FirstName,
 		LastName:    pr.LastName,
@@ -19,12 +16,12 @@ func mapToPartyDTO(pr *controller.PartyReadDTO) *controller.PartyDTO {
 		UpdatedAt:   pr.UpdatedAt,
 		CreatedBy:   pr.CreatedBy,
 		UpdatedBy:   pr.UpdatedBy,
-		Address:     mapToAddressDTO(pr),
+		Address:     mapToAddressResponseDTO(pr),
 	}
 }
 
-func mapToAddressDTO(pr *controller.PartyReadDTO) *controller.AddressDTO {
-	return &controller.AddressDTO{
+func mapToAddressResponseDTO(pr *models.PartyReadDTO) *models.AddressResponseDTO {
+	return &models.AddressResponseDTO{
 		ID:        pr.AddrID,
 		StreetOne: pr.AddrStreetOne,
 		StreetTwo: pr.AddrStreetTwo,
@@ -38,22 +35,4 @@ func mapToAddressDTO(pr *controller.PartyReadDTO) *controller.AddressDTO {
 		CreatedBy: pr.AddrCreatedBy,
 		UpdatedBy: pr.AddrUpdatedBy,
 	}
-}
-
-func mapToPartyError(path string, err error) *controller.PartyError {
-	pe := &controller.PartyError{
-		Timestamp: time.Now(),
-		Path:      path,
-		Message:   err.Error(),
-	}
-
-	for e, c := range controller.ErrMap {
-		if errors.Is(err, e) {
-			pe.Code = c
-			pe.Status = http.StatusText(c)
-			break
-		}
-	}
-
-	return pe
 }
