@@ -72,6 +72,7 @@ func (m *Middleware) Headers(next http.HandlerFunc) http.HandlerFunc {
 func (m *Middleware) Cache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		partyId, ok := r.Context().Value(constants.PartyIdKey).(int)
+
 		if !ok {
 			m.logger.Error("invalid or missing party ID in context")
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -96,6 +97,7 @@ func (m *Middleware) Cache(next http.HandlerFunc) http.HandlerFunc {
 
 		m.logger.Info("cache hit for party", "partyID", partyId)
 		_, err = w.Write([]byte(res))
+
 		if err != nil {
 			m.logger.Error("error writing response", "reason", err, "partyId", partyId)
 			return
