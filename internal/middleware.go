@@ -20,7 +20,7 @@ type Middleware struct {
 }
 
 const (
-	partyIdKey PartyIdContextKey = "partyId"
+	partyIdKey PartyIdContextKey = "partyId" // the unique key that stores the party ID in the request context.
 )
 
 func NewMiddleware(logger *slog.Logger, cache *redis.Client) *Middleware {
@@ -30,6 +30,8 @@ func NewMiddleware(logger *slog.Logger, cache *redis.Client) *Middleware {
 	}
 }
 
+// ValidatePartyId validates the request contains an ID and that the ID is a valid integer.
+// It will then set the ID in the request context object to be accessed later in the runtime.
 func (m *Middleware) ValidatePartyId(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
@@ -51,6 +53,7 @@ func (m *Middleware) ValidatePartyId(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// Logging logs the HTTP request and what resource was it routed to.
 func (m *Middleware) Logging(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		g := slog.Group("request", "method", r.Method, "path", r.RequestURI)
@@ -59,6 +62,7 @@ func (m *Middleware) Logging(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// Headers sets default outgoing headers all requests will have.
 func (m *Middleware) Headers(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", contentType)
@@ -67,6 +71,8 @@ func (m *Middleware) Headers(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// Cache checks if a party exists in the cache before the request is routed to the handler.
+// If the party is not found, go to the handler.
 func (m *Middleware) Cache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		partyId, ok := r.Context().Value(partyIdKey).(int)

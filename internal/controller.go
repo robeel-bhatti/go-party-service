@@ -61,14 +61,6 @@ func (pc *PartyController) UpdateParty(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (pc *PartyController) DeleteParty(w http.ResponseWriter, r *http.Request) {
-
-}
-
 func (pc *PartyController) CreateParty(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (pc *PartyController) GetParties(w http.ResponseWriter, r *http.Request) {
 
 }
