@@ -1,10 +1,10 @@
-package internal
+package controller
 
 import "time"
 
-// PartyRow represents a row from the database.
+// PartyReadDTO represents a row from the database.
 // Pointer type means the field is nullable.
-type PartyRow struct {
+type PartyReadDTO struct {
 	ID            int       `db:"id"`
 	FirstName     string    `db:"first_name"`
 	LastName      string    `db:"last_name"`
@@ -28,6 +28,29 @@ type PartyRow struct {
 	AddrUpdatedAt time.Time `db:"address_updated_at"`
 	AddrCreatedBy string    `db:"address_created_by"`
 	AddrUpdatedBy string    `db:"address_updated_by"`
+}
+
+type PartyWriteDTO struct {
+	FirstName   string  `db:"first_name"`
+	LastName    string  `db:"last_name"`
+	MiddleName  *string `db:"middle_name"`
+	Email       string  `db:"email"`
+	PhoneNumber string  `db:"phone_number"`
+	AddressID   int     `db:"address_id"`
+	CreatedBy   string  `db:"created_by"`
+	UpdatedBy   string  `db:"updated_by"`
+}
+
+type AddressWriteDTO struct {
+	AddrStreetOne string  `db:"street_one"`
+	AddrStreetTwo *string `db:"street_two"`
+	AddrCity      string  `db:"city"`
+	AddrState     string  `db:"state"`
+	AddrZipCode   string  `db:"zip_code"`
+	AddrCountry   string  `db:"country"`
+	AddrHash      string  `db:"hash"`
+	AddrCreatedBy string  `db:"address_created_by"`
+	AddrUpdatedBy string  `db:"address_updated_by"`
 }
 
 // PartyDTO domain object
@@ -59,4 +82,26 @@ type AddressDTO struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	CreatedBy string    `json:"created_by"`
 	UpdatedBy string    `json:"updated_by"`
+}
+
+type PartyCreateDTO struct {
+	FirstName   string      `json:"first_name"`
+	LastName    string      `json:"last_name"`
+	MiddleName  *string     `json:"middle_name"`
+	Email       string      `json:"email"`
+	PhoneNumber string      `json:"phone_number"`
+	Address     *AddressDTO `json:"address"`
+	CreatedBy   string      `json:"created_by"`
+	UpdatedBy   string      `json:"updated_by"`
+}
+
+type AddressCreateDTO struct {
+	StreetOne string  `json:"street_one"`
+	StreetTwo *string `json:"street_two"`
+	City      string  `json:"city"`
+	State     string  `json:"state"`
+	ZipCode   string  `json:"zip_code"`
+	Country   string  `json:"country"`
+	CreatedBy string  `json:"created_by"`
+	UpdatedBy string  `json:"updated_by"`
 }

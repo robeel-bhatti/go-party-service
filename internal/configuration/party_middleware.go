@@ -1,4 +1,4 @@
-package internal
+package configuration
 
 import (
 	"context"
@@ -8,20 +8,14 @@ import (
 	"log/slog"
 	"math/rand"
 	"net/http"
-	"os"
+	"robeel-bhatti/go-party-service/internal/constants"
 	"strconv"
 )
-
-type PartyIdContextKey string
 
 type Middleware struct {
 	logger *slog.Logger
 	cache  *redis.Client
 }
-
-const (
-	partyIdKey PartyIdContextKey = "partyId" // the unique key that stores the party ID in the request context.
-)
 
 func NewMiddleware(logger *slog.Logger, cache *redis.Client) *Middleware {
 	return &Middleware{
@@ -35,6 +29,7 @@ func NewMiddleware(logger *slog.Logger, cache *redis.Client) *Middleware {
 func (m *Middleware) ValidatePartyId(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
+
 		if id == "" {
 			m.logger.Warn("missing party ID in request", "path", r.URL.Path)
 			http.Error(w, "party id is required", http.StatusUnprocessableEntity)
@@ -42,13 +37,14 @@ func (m *Middleware) ValidatePartyId(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		partyId, err := strconv.Atoi(id)
+
 		if err != nil {
 			m.logger.Warn("invalid party ID format", "id", id, "error", err)
 			http.Error(w, "party id is invalid ", http.StatusUnprocessableEntity)
 			return
 		}
 
-		r = r.WithContext(context.WithValue(r.Context(), partyIdKey, partyId))
+		r = r.WithContext(context.WithValue(r.Context(), constants.PartyIdKey, partyId))
 		next(w, r)
 	}
 }
@@ -65,7 +61,7 @@ func (m *Middleware) Logging(next http.HandlerFunc) http.HandlerFunc {
 // Headers sets default outgoing headers all requests will have.
 func (m *Middleware) Headers(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", contentType)
+		w.Header().Set("Content-Type", constants.ContentType)
 		w.Header().Set("Request-ID", strconv.Itoa(rand.Intn(100)))
 		next(w, r)
 	}
@@ -75,7 +71,7 @@ func (m *Middleware) Headers(next http.HandlerFunc) http.HandlerFunc {
 // If the party is not found, go to the handler.
 func (m *Middleware) Cache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		partyId, ok := r.Context().Value(partyIdKey).(int)
+		partyId, ok := r.Context().Value(constants.PartyIdKey).(int)
 		if !ok {
 			m.logger.Error("invalid or missing party ID in context")
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -83,7 +79,7 @@ func (m *Middleware) Cache(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		m.logger.Info("checking cache for party", "partyID", partyId)
-		ck := fmt.Sprintf("%s:%d", os.Getenv("SERVICE_NAME"), partyId)
+		ck := fmt.Sprintf("%s:%d", constants.ServiceName, partyId)
 		res, err := m.cache.Get(r.Context(), ck).Result()
 
 		if errors.Is(err, redis.Nil) {

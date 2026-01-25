@@ -1,17 +1,19 @@
-package internal
+package controller
 
 import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"robeel-bhatti/go-party-service/internal"
+	"robeel-bhatti/go-party-service/internal/service"
 )
 
 type PartyController struct {
 	logger       *slog.Logger
-	partyService *PartyService
+	partyService *service.PartyService
 }
 
-func NewPartyController(logger *slog.Logger, ps *PartyService) *PartyController {
+func NewPartyController(logger *slog.Logger, ps *service.PartyService) *PartyController {
 	return &PartyController{
 		logger:       logger,
 		partyService: ps,
@@ -22,12 +24,12 @@ func NewPartyController(logger *slog.Logger, ps *PartyService) *PartyController 
 // if any error occur marshalling or writing the response to the buffer, return a default plaintext 500 response as
 // a final measure.
 func (pc *PartyController) GetPartyById(w http.ResponseWriter, r *http.Request) {
-	partyId := r.Context().Value(partyIdKey).(int)
+	partyId := r.Context().Value(internal.partyIdKey).(int)
 	pc.logger.Info("controller retrieved request to get party from database", "partyId", partyId)
 	res, err := pc.partyService.GetPartyById(r.Context(), partyId)
 
 	if err != nil {
-		pe := mapToPartyError(r.RequestURI, err)
+		pe := service.mapToPartyError(r.RequestURI, err)
 		b, err := json.Marshal(pe)
 		if err != nil {
 			http.Error(w, "error marshalling response", http.StatusInternalServerError)

@@ -1,13 +1,14 @@
-package internal
+package service
 
 import (
 	"errors"
 	"net/http"
+	"robeel-bhatti/go-party-service/internal/controller"
 	"time"
 )
 
-func mapToPartyDTO(pr *PartyRow) *PartyDTO {
-	return &PartyDTO{
+func mapToPartyDTO(pr *controller.PartyReadDTO) *controller.PartyDTO {
+	return &controller.PartyDTO{
 		ID:          pr.ID,
 		FirstName:   pr.FirstName,
 		LastName:    pr.LastName,
@@ -22,8 +23,8 @@ func mapToPartyDTO(pr *PartyRow) *PartyDTO {
 	}
 }
 
-func mapToAddressDTO(pr *PartyRow) *AddressDTO {
-	return &AddressDTO{
+func mapToAddressDTO(pr *controller.PartyReadDTO) *controller.AddressDTO {
+	return &controller.AddressDTO{
 		ID:        pr.AddrID,
 		StreetOne: pr.AddrStreetOne,
 		StreetTwo: pr.AddrStreetTwo,
@@ -39,14 +40,14 @@ func mapToAddressDTO(pr *PartyRow) *AddressDTO {
 	}
 }
 
-func mapToPartyError(path string, err error) *PartyError {
-	pe := &PartyError{
+func mapToPartyError(path string, err error) *controller.PartyError {
+	pe := &controller.PartyError{
 		Timestamp: time.Now(),
 		Path:      path,
 		Message:   err.Error(),
 	}
 
-	for e, c := range ErrMap {
+	for e, c := range controller.ErrMap {
 		if errors.Is(err, e) {
 			pe.Code = c
 			pe.Status = http.StatusText(c)

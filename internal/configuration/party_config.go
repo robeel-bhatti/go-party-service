@@ -1,4 +1,4 @@
-package internal
+package configuration
 
 import (
 	"context"
@@ -7,10 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-)
-
-const (
-	contentType = "application/json"
+	"robeel-bhatti/go-party-service/internal/constants"
 )
 
 type App struct{}
@@ -67,7 +64,7 @@ func (app *App) configureLogger() *slog.Logger {
 	}
 
 	opts := &slog.HandlerOptions{Level: logLevel}
-	return slog.New(slog.NewJSONHandler(os.Stderr, opts)).With("service", os.Getenv("SERVICE_NAME"))
+	return slog.New(slog.NewJSONHandler(os.Stderr, opts)).With("service", constants.ContentType)
 }
 
 // configureDB creates a connection to the database

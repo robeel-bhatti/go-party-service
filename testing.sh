@@ -9,7 +9,6 @@ kill_process() {
 
   if [ -n "$pid" ]; then
     kill -9 $pid
-    echo
   fi
 }
 
@@ -18,13 +17,15 @@ kill_process 8080
 echo "Starting Docker..."
 docker compose up -d
 
-sleep 3  # wait for deps to start up
+# wait for deps to start up
+sleep 3
 
 echo "Running Go-Party-Service..."
-go run main.go & # run it in the background
-GO_PID=$! # grab process ID to kill it later
+go run main.go &
+GO_PID=$!
 
-sleep 3  # wait for server to start up
+# wait for server to start up
+sleep 3
 
 echo "Testing GET /api/v1/parties/{id} endpoint"
 echo -n "Enter Party ID: "
