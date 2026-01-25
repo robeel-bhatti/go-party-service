@@ -67,7 +67,7 @@ func (app *App) configureLogger() *slog.Logger {
 	}
 
 	opts := &slog.HandlerOptions{Level: logLevel}
-	return slog.New(slog.NewJSONHandler(os.Stdout, opts)).With("service", os.Getenv("SERVICE_NAME"))
+	return slog.New(slog.NewJSONHandler(os.Stderr, opts)).With("service", os.Getenv("SERVICE_NAME"))
 }
 
 // configureDB creates a connection to the database

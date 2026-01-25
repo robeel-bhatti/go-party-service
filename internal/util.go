@@ -24,18 +24,18 @@ func mapToPartyDTO(pr *PartyRow) *PartyDTO {
 
 func mapToAddressDTO(pr *PartyRow) *AddressDTO {
 	return &AddressDTO{
-		ID:         pr.AddrID,
-		StreetOne:  pr.AddrStreetOne,
-		StreetTwo:  pr.AddrStreetTwo,
-		City:       pr.AddrCity,
-		State:      pr.AddrState,
-		PostalCode: pr.AddrPostalCode,
-		Country:    pr.AddrCountry,
-		Hash:       pr.AddrHash,
-		CreatedAt:  pr.AddrCreatedAt,
-		UpdatedAt:  pr.AddrUpdatedAt,
-		CreatedBy:  pr.AddrCreatedBy,
-		UpdatedBy:  pr.AddrUpdatedBy,
+		ID:        pr.AddrID,
+		StreetOne: pr.AddrStreetOne,
+		StreetTwo: pr.AddrStreetTwo,
+		City:      pr.AddrCity,
+		State:     pr.AddrState,
+		ZipCode:   pr.AddrZipCode,
+		Country:   pr.AddrCountry,
+		Hash:      pr.AddrHash,
+		CreatedAt: pr.AddrCreatedAt,
+		UpdatedAt: pr.AddrUpdatedAt,
+		CreatedBy: pr.AddrCreatedBy,
+		UpdatedBy: pr.AddrUpdatedBy,
 	}
 }
 

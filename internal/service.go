@@ -34,8 +34,10 @@ func (s *PartyService) GetPartyById(ctx context.Context, partyId int) (*PartyDTO
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
+			s.logger.Error("no party was found", "reason", err)
 			return nil, fmt.Errorf("party %d %w", partyId, ErrNotFound)
 		}
+		s.logger.Error("unexpected database error", "reason", err)
 		return nil, fmt.Errorf("party %d %w", partyId, ErrInternalServerError)
 	}
 
