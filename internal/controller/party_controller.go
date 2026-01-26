@@ -58,11 +58,3 @@ func (pc *PartyController) GetPartyById(w http.ResponseWriter, r *http.Request) 
 	}
 	return
 }
-
-func (pc *PartyController) CreateParty(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (pc *PartyController) UpdateParty(w http.ResponseWriter, r *http.Request) {
-
-}
