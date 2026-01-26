@@ -8,7 +8,7 @@ Golang's philosophy of making code explicit (ex. error handling) and its simple 
 and quick to iterate on. There is also less dependency on 3rd party libraries. I found this to be a good mix
 of making code explicit and provided abstractions where necessary to decouple app components.
 
-Also enjoyed Golang's packing approach. Imports are easy to do as you just import the package name into a Go file.
+Also enjoyed Golang's packaging approach. Imports are easy to do as you just import the package name into a Go file.
 Then you have access to all the Go code in that package, no matter how many files are in that package. But 
 still be cautious on avoiding cyclic imports. 
 
